@@ -2,7 +2,7 @@
 lock '3.6.1'
 
 set :application, 'appname'
-set :repo_url, 'git@github.com:devigned/confoo-azure-ruby-infra.git'
+set :repo_url, 'https://github.com/devigned/confoo-azure-ruby-infra.git'
 set :user,            'deploy'
 set :puma_threads,    [4, 16]
 set :puma_workers,    0
