@@ -20,9 +20,9 @@
     {
       "type": "Microsoft.Web/serverfarms",
       "sku": {
-        "name": "S1",
+        "name": "S3",
         "tier": "Standard",
-        "size": "S1",
+        "size": "S3",
         "family": "S",
         "capacity": 1
       },
@@ -66,7 +66,8 @@
             "ipBasedSslState": 0
           }
         ],
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('server_farm_name'))]"
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('server_farm_name'))]",
+        "reserved": true
       },
       "resources": [],
       "dependsOn": [
