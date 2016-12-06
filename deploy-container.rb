@@ -3,7 +3,7 @@ require_relative './lib/azure/common-deploy'
 
 GROUP_NAME  = 'confoo-containers'
 site_name   = 'confoo123'
-container   = 'devigned/confoo:v1.0.0'
+container   = 'devigned/confoo:v1.0.1'
 
 template = File.read(File.expand_path(File.join(__dir__, './container-template.json')))
 deployer = Azure::Deployer.new
