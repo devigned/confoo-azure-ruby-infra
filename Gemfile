@@ -41,6 +41,16 @@ group :development do
   gem 'spring-watcher-listen'
   gem 'better_errors'
   gem 'binding_of_caller'
+  gem 'capistrano', '~> 3.6'
+  gem 'capistrano-rbenv',     require: false
+  gem 'capistrano-rails',     require: false
+  gem 'capistrano-bundler',   require: false
+  gem 'capistrano3-puma',     require: false
+  gem 'highline',             require: false
+  gem 'azure_mgmt_resources', '~>0.6.0'
+  gem 'azure_mgmt_compute',   '~>0.6.0'
+  gem 'azure_mgmt_network',   '~>0.6.0'
+  gem 'azure_mgmt_storage',   '~>0.6.0'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
