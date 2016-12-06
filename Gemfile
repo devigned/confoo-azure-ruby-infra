@@ -49,6 +49,7 @@ group :development do
   gem 'azure_mgmt_compute',   '~>0.6.0'
   gem 'azure_mgmt_network',   '~>0.6.0'
   gem 'azure_mgmt_storage',   '~>0.6.0'
+  gem 'azure_mgmt_web',       '~>0.6.0'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem

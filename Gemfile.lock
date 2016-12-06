@@ -49,6 +49,8 @@ GEM
       ms_rest_azure (~> 0.5.0)
     azure_mgmt_storage (0.6.0)
       ms_rest_azure (~> 0.5.0)
+    azure_mgmt_web (0.6.0)
+      ms_rest_azure (~> 0.5.0)
     better_errors (2.1.1)
       coderay (>= 1.0.0)
       erubis (>= 2.6.6)
@@ -230,6 +232,7 @@ DEPENDENCIES
   azure_mgmt_network (~> 0.6.0)
   azure_mgmt_resources (~> 0.6.0)
   azure_mgmt_storage (~> 0.6.0)
+  azure_mgmt_web (~> 0.6.0)
   better_errors
   binding_of_caller
   byebug

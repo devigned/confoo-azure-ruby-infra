@@ -8,8 +8,6 @@ ENV HOME /rails
 ENV RAILS_ENV production
 # TODO move this to static file server, e.g. nginx
 ENV RAILS_SERVE_STATIC_FILES true
-ENV SECRET_KEY_BASE abcdefgh12345678
-ENV DB_HOST mongo:27017
 
 WORKDIR $HOME
 
@@ -21,5 +19,7 @@ RUN bundle install --deployment --without development test
 # Add the app code
 ADD . $HOME
 
+RUN bundle exec rails assets:precompile
+
 # Default command
-CMD ["bundle", "exec", "rails", "server"]
+CMD bundle exec rails server -p $PORT

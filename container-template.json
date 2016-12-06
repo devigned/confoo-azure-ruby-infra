@@ -1,0 +1,95 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "server_farm_name": {
+      "defaultValue": "confoo-rb-sf",
+      "type": "String"
+    },
+    "site_name": {
+      "defaultValue": "confoo-rb",
+      "type": "String"
+    },
+    "doc_db_name": {
+      "defaultValue": "confoo-con-mongo",
+      "type": "string"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "sku": {
+        "name": "S1",
+        "tier": "Standard",
+        "size": "S1",
+        "family": "S",
+        "capacity": 1
+      },
+      "kind": "linux",
+      "name": "[parameters('server_farm_name')]",
+      "apiVersion": "2015-08-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "name": "[parameters('server_farm_name')]",
+        "numberOfWorkers": 1
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "kind": "app",
+      "name": "[parameters('site_name')]",
+      "apiVersion": "2015-08-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "name": "[parameters('site_name')]",
+        "hostNames": [
+          "[concat(parameters('site_name'),'.azurewebsites.net')]"
+        ],
+        "enabledHostNames": [
+          "[concat(parameters('site_name'),'.azurewebsites.net')]",
+          "[concat(parameters('site_name'),'.scm.azurewebsites.net')]"
+        ],
+        "hostNameSslStates": [
+          {
+            "name": "[concat(parameters('site_name'),'.azurewebsites.net')]",
+            "sslState": 0,
+            "thumbprint": null,
+            "ipBasedSslState": 0
+          },
+          {
+            "name": "[concat(parameters('site_name'),'.scm.azurewebsites.net')]",
+            "sslState": 0,
+            "thumbprint": null,
+            "ipBasedSslState": 0
+          }
+        ],
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('server_farm_name'))]"
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', parameters('server_farm_name'))]"
+      ]
+    },
+    {
+      "name": "[parameters('doc_db_name')]",
+      "location": "[resourceGroup().location]",
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "kind": "GlobalDocumentDB",
+      "apiVersion": "2015-04-08",
+      "tags": {},
+      "properties": {
+        "name": "[parameters('doc_db_name')]",
+        "databaseAccountOfferType": "Standard",
+        "locations": [
+          {
+            "failoverPriority": 0,
+            "locationName": "[resourceGroup().location]"
+          }
+        ]
+      }
+    }
+  ]
+}

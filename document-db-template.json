@@ -1,0 +1,35 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "doc_db_name": {
+      "defaultValue": "confoo-mongo",
+      "type": "string"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "name": "[parameters('doc_db_name')]",
+      "location": "[resourceGroup().location]",
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "kind": "GlobalDocumentDB",
+      "apiVersion": "2015-04-08",
+      "tags": {},
+      "properties": {
+        "name": "[parameters('doc_db_name')]",
+        "databaseAccountOfferType": "Standard",
+        "locations": [
+          {
+            "failoverPriority": 0,
+            "locationName": "West US"
+          },
+          {
+            "failoverPriority": 1,
+            "locationName": "East US"
+          }
+        ]
+      }
+    }
+  ]
+}

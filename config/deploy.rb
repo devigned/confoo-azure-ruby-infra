@@ -56,11 +56,6 @@ namespace :deploy do
         puts 'Run `git push` to sync changes.'
         exit
       end
-      if test('[ -f /etc/nginx/sites-enabled/default ]')
-        execute :sudo, :rm, '/etc/nginx/sites-enabled/default'
-        execute :sudo, :ln, '-nfs', "/home/#{fetch(:user)}/apps/#{fetch(:application)}/current/config/nginx.conf", "/etc/nginx/sites-enabled/#{fetch(:application)}"
-        execute :sudo, :service, :nginx, :restart
-      end
     end
   end
 
@@ -75,6 +70,12 @@ namespace :deploy do
   desc 'Restart application'
   task :restart do
     on roles(:app), in: :sequence, wait: 5 do
+      if test('[ -f /etc/nginx/sites-enabled/default ]')
+        execute :sudo, :rm, '/etc/nginx/sites-enabled/default'
+        execute :sudo, :ln, '-nfs', "/home/#{fetch(:user)}/apps/#{fetch(:application)}/current/config/nginx.conf", "/etc/nginx/sites-enabled/#{fetch(:application)}"
+        execute :sudo, :service, :nginx, :restart
+      end
+      upload! File.join(File.dirname(__FILE__), 'local_env.yml'), "/home/#{fetch(:user)}/local_env.yml"
       symlinks = {
           "/home/#{fetch(:user)}/local_env.yml" => "/home/#{fetch(:user)}/apps/#{fetch(:application)}/current/config/local_env.yml"
       }

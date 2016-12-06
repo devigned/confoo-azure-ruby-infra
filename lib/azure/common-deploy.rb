@@ -2,6 +2,7 @@ require 'azure_mgmt_resources'
 require 'azure_mgmt_network'
 require 'azure_mgmt_storage'
 require 'azure_mgmt_compute'
+require 'azure_mgmt_web'
 require 'securerandom'
 
 WEST_US = 'westus'
@@ -10,11 +11,12 @@ StorageModels = Azure::ARM::Storage::Models
 NetworkModels = Azure::ARM::Network::Models
 ComputeModels = Azure::ARM::Compute::Models
 ResourceModels = Azure::ARM::Resources::Models
+WebModels = Azure::ARM::Web::Models
 
 module Azure
   class Deployer
 
-    attr_reader :network, :storage, :resource, :compute
+    attr_reader :network, :storage, :resource, :compute, :web
 
     def initialize
       subscription_id = ENV['AZURE_SUBSCRIPTION_ID']
@@ -27,9 +29,36 @@ module Azure
       @network = Azure::ARM::Network::NetworkManagementClient.new(credentials)
       @storage = Azure::ARM::Storage::StorageManagementClient.new(credentials)
       @compute = Azure::ARM::Compute::ComputeManagementClient.new(credentials)
-      [@resource, @network, @storage, @compute].each do |client|
+      @web = Azure::ARM::Web::WebSiteManagementClient.new(credentials)
+      [@resource, @network, @storage, @compute, @web].each do |client|
         client.subscription_id=subscription_id
       end
+    end
+
+    def put_deployment(name, template, parameters = {})
+      location = parameters.delete(:location) || WEST_US
+
+      # ensure the resource group is created
+      params = ResourceModels::ResourceGroup.new.tap do |rg|
+        rg.location = location
+      end
+      group = resource.resource_groups.create_or_update(name, params)
+
+      # build the deployment from a json file template from parameters
+      deployment = ResourceModels::Deployment.new
+      deployment.properties = ResourceModels::DeploymentProperties.new
+      deployment.properties.template = JSON.parse(template)
+      deployment.properties.mode = ResourceModels::DeploymentMode::Incremental
+
+      # build the deployment template parameters from Hash to {key: {value: value}} format
+      if parameters.delete(:add_ssh)
+        parameters.merge!(ssh_key: default_pub_key)
+      end
+      deployment.properties.parameters = Hash[*parameters.map { |k, v| [k, {value: v}] }.flatten]
+
+      # put the deployment to the resource group
+      puts "Deploying template to group #{group.name}"
+      resource.deployments.create_or_update(group.name, 'confoo-deploy', deployment)
     end
 
     def put_resource_group(name, location=WEST_US)
@@ -94,7 +123,7 @@ module Azure
     end
 
     def vm_exists?(group, name)
-      self.compute.virtual_machines.list(group.name).any?{|vm| vm.name == name}
+      self.compute.virtual_machines.list(group.name).any? { |vm| vm.name == name }
     end
 
     # Create a Virtual Machine and return it
@@ -155,23 +184,56 @@ module Azure
         end
       end
 
-      ssh_pub_location = File.expand_path('~/.ssh/id_rsa.pub')
-      if File.exists? ssh_pub_location
-        key_data = File.read(ssh_pub_location)
-        vm_create_params.os_profile.linux_configuration = ComputeModels::LinuxConfiguration.new.tap do |linux|
-          linux.disable_password_authentication = true
-          linux.ssh = ComputeModels::SshConfiguration.new.tap do |ssh_config|
-            ssh_config.public_keys = [
-                ComputeModels::SshPublicKey.new.tap do |pub_key|
-                  pub_key.key_data = key_data
-                  pub_key.path = '/home/deploy/.ssh/authorized_keys'
-                end
-            ]
-          end
+      key_data = default_pub_key
+      vm_create_params.os_profile.linux_configuration = ComputeModels::LinuxConfiguration.new.tap do |linux|
+        linux.disable_password_authentication = true
+        linux.ssh = ComputeModels::SshConfiguration.new.tap do |ssh_config|
+          ssh_config.public_keys = [
+              ComputeModels::SshPublicKey.new.tap do |pub_key|
+                pub_key.key_data = key_data
+                pub_key.path = '/home/deploy/.ssh/authorized_keys'
+              end
+          ]
         end
       end
 
       self.compute.virtual_machines.create_or_update(group.name, name, vm_create_params)
+    end
+
+    def default_pub_key
+      ssh_pub_location = File.expand_path('~/.ssh/id_rsa.pub')
+      if File.exists? ssh_pub_location
+        File.read(ssh_pub_location)
+      else
+        nil
+      end
+    end
+
+    def provision(remote)
+      ssh = "ssh #{remote}"
+
+      sudo_script = <<-SCRIPT
+apt-get update;
+apt-get install -y nginx nodejs mongodb-server git-core curl zlib1g-dev build-essential libssl-dev libreadline-dev libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev libcurl4-openssl-dev python-software-properties libffi-dev;
+      SCRIPT
+
+      script = <<-SCRIPT
+gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3;
+curl -sSL https://get.rvm.io | bash -s stable --rails;
+rvm;
+rvm install 2.3.0;
+sudo systemctl start mongodb
+      SCRIPT
+
+      puts ssh
+      while `#{ssh} "sh -c 'echo \\"foo\\"'"`.strip != 'foo'
+        sleep(5)
+        puts 'waiting for ssh to come up'
+      end
+      puts 'Ensuring OS dependencies are installed'
+      puts `#{ssh} "sudo sh -c '#{sudo_script}'"`
+      puts `#{ssh} "sh -c $'#{script}'"`
+      puts `scp ./config/local_env.yml #{remote}:local_env.yml`
     end
 
   end

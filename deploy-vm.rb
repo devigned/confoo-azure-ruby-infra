@@ -19,28 +19,8 @@ else
   public_ip = deployer.network.public_ipaddresses.get(resource_group.name, public_ip_name)
 end
 remote =  "#{vm.os_profile.admin_username}@#{public_ip.ip_address}"
-ssh = "ssh #{remote}"
 
-sudo_script = <<-SCRIPT
-apt-get update;
-apt-get install -y nginx nodejs mongodb-server git-core curl zlib1g-dev build-essential libssl-dev libreadline-dev libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev libcurl4-openssl-dev python-software-properties libffi-dev;
-SCRIPT
-
-secret_key_export = "\\export SECRET_KEY_BASE=#{ENV['SECRET_KEY_BASE']}"
-
-script = <<-SCRIPT
-gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3;
-curl -sSL https://get.rvm.io | bash -s stable --rails;
-rvm;
-rvm install 2.3.0;
-'grep -q -F #{secret_key_export} ~/.bashrc || echo #{secret_key_export} >> ~/.bashrc'
-sudo systemctl start mongodb
-SCRIPT
+deployer.provision(remote)
 
 
-puts ssh
-puts 'Ensuring OS dependencies are installed'
-puts `#{ssh} "sudo sh -c '#{sudo_script}'"`
-puts `#{ssh} "sh -c $'#{script}'"`
-puts `scp ./config/local_env.yml #{remote}:local_env.yml`
 
