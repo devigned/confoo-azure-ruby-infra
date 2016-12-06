@@ -58,8 +58,9 @@ namespace :deploy do
       end
       if test('[ -f /etc/nginx/sites-enabled/default ]')
         execute :sudo, :rm, '/etc/nginx/sites-enabled/default'
+        execute :sudo, :ln, '-nfs', "/home/#{fetch(:user)}/apps/#{fetch(:application)}/current/config/nginx.conf", "/etc/nginx/sites-enabled/#{fetch(:application)}"
+        execute :sudo, :service, :nginx, :restart
       end
-      execute :sudo, :ln, '-nfs', "/home/#{fetch(:user)}/apps/#{fetch(:application)}/current/config/nginx.conf", "/etc/nginx/sites-enabled/#{fetch(:application)}"
     end
   end
 
