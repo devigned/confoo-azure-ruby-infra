@@ -75,6 +75,10 @@ namespace :deploy do
   desc 'Restart application'
   task :restart do
     on roles(:app), in: :sequence, wait: 5 do
+      symlinks = {
+          "/home/#{fetch(:user)}/local_env.yml" => "/home/#{fetch(:user)}/apps/#{fetch(:application)}/current/config/local_env.yml"
+      }
+      execute symlinks.map{|from, to| "ln -nfs #{from} #{to}"}.join(' && ')
       invoke 'puma:restart'
     end
   end

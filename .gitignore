@@ -52,3 +52,4 @@ build-iPhoneSimulator/
 .DS_Store
 .idea
 log
+config/local_env.yml
