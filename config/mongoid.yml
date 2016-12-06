@@ -147,7 +147,7 @@ test:
 production:
   clients:
     default:
-      uri: <%= ENV['DOC_DB_URL'] || 'localhost:27017' %>
+      uri: <%= ENV['DOC_DB_URL'] || 'mongodb://localhost:27017' %>
       options:
         # The default timeout is 5, which is the time in seconds
         # for a connection to time out.
