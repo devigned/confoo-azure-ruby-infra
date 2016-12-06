@@ -56,6 +56,10 @@ namespace :deploy do
         puts 'Run `git push` to sync changes.'
         exit
       end
+      if test('[ -f /etc/nginx/sites-enabled/default ]')
+        execute :sudo, :rm, '/etc/nginx/sites-enabled/default'
+      end
+      execute :sudo, :ln, '-nfs', "/home/#{fetch(:user)}/apps/#{fetch(:application)}/current/config/nginx.conf", "/etc/nginx/sites-enabled/#{fetch(:application)}"
     end
   end
 
